@@ -1,0 +1,5 @@
+node_modules/
+otb-chess-recorder/node_modules/
+otb-chess-recorder/dist/
+.DS_Store
+*.local

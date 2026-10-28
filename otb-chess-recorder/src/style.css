@@ -1,0 +1,61 @@
+@import "tailwindcss";
+@import "@lichess-org/chessground/assets/chessground.base.css";
+@import "@lichess-org/chessground/assets/chessground.brown.css";
+@import "@lichess-org/chessground/assets/chessground.cburnett.css";
+
+:root {
+  color-scheme: dark;
+  /* Mobile portrait default: full width minus padding, fitting between top/bottom bars */
+  --board-size: min(95vw, calc(100dvh - 240px));
+}
+
+@media (min-width: 768px) {
+  :root {
+    /* Desktop / Tablet: scale up generously to fill vertical screen height */
+    --board-size: min(68vw, calc(100dvh - 210px), 760px);
+  }
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: #09090b;
+  color: #f4f4f5;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* Chessground board container sizing */
+.board-shell {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#chessground-board {
+  width: var(--board-size);
+  height: var(--board-size);
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 12px 35px -5px rgba(0, 0, 0, 0.75);
+  touch-action: none;
+  user-select: none;
+}
+
+.player-bar-width {
+  width: var(--board-size);
+}
+
+/* Custom scrollbar for move list */
+.moves-scroll::-webkit-scrollbar {
+  height: 5px;
+  width: 5px;
+}
+.moves-scroll::-webkit-scrollbar-thumb {
+  background: #52525b;
+  border-radius: 9999px;
+}

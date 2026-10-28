@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-zinc-950 text-zinc-100">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#18181b" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <title>OTB Chess Recorder</title>
+  </head>
+  <body class="h-dvh flex flex-col justify-between overflow-hidden select-none bg-zinc-950 font-sans">
+    
+    <!-- TOP APP BAR -->
+    <header class="flex items-center justify-between px-4 py-2.5 bg-zinc-900 border-b border-zinc-800 shrink-0">
+      <div class="flex items-center gap-2.5">
+        <span class="font-extrabold text-base tracking-wide text-amber-400">CHESS<span class="text-zinc-100">REC</span></span>
+        <div id="overall-time-badge" class="px-2.5 py-1 rounded-md text-xs md:text-sm font-mono font-semibold bg-zinc-800 text-zinc-200 border border-zinc-700" title="Overall Game Duration">
+          00:00
+        </div>
+        <span id="wake-lock-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" title="Screen Wake Lock Active"></span>
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <button id="btn-new-game" class="min-h-[38px] px-3.5 py-1.5 text-xs md:text-sm font-semibold rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 transition cursor-pointer">
+          New Game
+        </button>
+        <button id="btn-archive" class="min-h-[38px] px-3.5 py-1.5 text-xs md:text-sm font-semibold rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 transition relative flex items-center gap-1.5 cursor-pointer">
+          <span>Archive</span>
+          <span id="archive-count" class="hidden px-1.5 py-0.2 rounded-full text-xs bg-amber-500 text-zinc-950 font-extrabold">0</span>
+        </button>
+        <button id="btn-export" class="min-h-[38px] px-3.5 py-1.5 text-xs md:text-sm font-bold rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 transition flex items-center gap-1.5 cursor-pointer shadow-sm">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>Export PGN</span>
+        </button>
+        <button id="btn-settings" class="min-h-[38px] px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 transition flex items-center justify-center cursor-pointer" aria-label="Settings" title="Settings">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN CONTAINER (PLAYERS + BOARD) -->
+    <main class="flex-1 flex flex-col justify-center items-center px-2 py-1 gap-1.5 relative overflow-hidden">
+
+      <!-- TOP PLAYER BAR (Black by default, or White if flipped) -->
+      <div id="top-player-bar" class="player-bar-width flex items-center justify-between px-3.5 py-2 rounded-lg bg-zinc-900/95 border border-zinc-800 transition">
+        <div class="flex items-center gap-2.5">
+          <span id="top-player-color" class="w-3.5 h-3.5 rounded-full bg-zinc-900 border-2 border-zinc-400"></span>
+          <span id="top-player-name" class="text-sm md:text-base font-bold text-zinc-100 truncate max-w-[160px]">Black</span>
+          <span id="top-turn-indicator" class="hidden text-[11px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded bg-amber-500 text-zinc-950">Turn</span>
+        </div>
+        <div class="flex items-baseline gap-2.5">
+          <span id="top-last-emt" class="text-xs md:text-sm font-mono text-zinc-400"></span>
+          <span id="top-clock" class="text-2xl md:text-3xl font-bold font-mono text-zinc-100">00:00</span>
+        </div>
+      </div>
+
+      <!-- CHESSGROUND BOARD SHELL -->
+      <div class="board-shell relative">
+        <div id="chessground-board"></div>
+
+        <!-- PAWN PROMOTION OVERLAY (MODAL) -->
+        <div id="promotion-overlay" class="hidden absolute inset-0 z-30 bg-black/80 backdrop-blur-xs flex flex-col items-center justify-center rounded-lg p-4">
+          <div class="text-base font-bold text-zinc-100 mb-3 tracking-wide">Choose Promotion Piece</div>
+          <div class="grid grid-cols-4 gap-2.5 w-full max-w-[320px]">
+            <button data-piece="q" class="promo-btn flex flex-col items-center justify-center p-3.5 rounded-lg bg-zinc-800 hover:bg-amber-500 hover:text-zinc-950 border border-zinc-600 active:scale-95 transition cursor-pointer">
+              <span class="text-3xl">♛</span>
+              <span class="text-xs font-bold mt-1">Queen</span>
+            </button>
+            <button data-piece="r" class="promo-btn flex flex-col items-center justify-center p-3.5 rounded-lg bg-zinc-800 hover:bg-amber-500 hover:text-zinc-950 border border-zinc-600 active:scale-95 transition cursor-pointer">
+              <span class="text-3xl">♜</span>
+              <span class="text-xs font-bold mt-1">Rook</span>
+            </button>
+            <button data-piece="b" class="promo-btn flex flex-col items-center justify-center p-3.5 rounded-lg bg-zinc-800 hover:bg-amber-500 hover:text-zinc-950 border border-zinc-600 active:scale-95 transition cursor-pointer">
+              <span class="text-3xl">♝</span>
+              <span class="text-xs font-bold mt-1">Bishop</span>
+            </button>
+            <button data-piece="n" class="promo-btn flex flex-col items-center justify-center p-3.5 rounded-lg bg-zinc-800 hover:bg-amber-500 hover:text-zinc-950 border border-zinc-600 active:scale-95 transition cursor-pointer">
+              <span class="text-3xl">♞</span>
+              <span class="text-xs font-bold mt-1">Knight</span>
+            </button>
+          </div>
+          <button id="promo-cancel" class="mt-4 px-4 py-1.5 text-xs font-semibold rounded bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 cursor-pointer">Cancel</button>
+        </div>
+
+        <!-- HISTORY VIEWING BANNER -->
+        <div id="history-banner" class="hidden absolute top-2 inset-x-2 z-20 bg-amber-950/95 border border-amber-500 rounded-lg px-3 py-1.5 text-xs md:text-sm text-amber-200 flex items-center justify-between shadow-lg">
+          <span class="font-medium">Viewing past move (board locked)</span>
+          <button id="btn-jump-live" class="px-2.5 py-0.5 rounded bg-amber-500 text-zinc-950 font-bold ml-2 cursor-pointer">Return to Live</button>
+        </div>
+      </div>
+
+      <!-- BOTTOM PLAYER BAR (White by default, or Black if flipped) -->
+      <div id="bottom-player-bar" class="player-bar-width flex items-center justify-between px-3.5 py-2 rounded-lg bg-zinc-900/95 border border-zinc-800 transition">
+        <div class="flex items-center gap-2.5">
+          <span id="bottom-player-color" class="w-3.5 h-3.5 rounded-full bg-white border-2 border-zinc-400"></span>
+          <span id="bottom-player-name" class="text-sm md:text-base font-bold text-zinc-100 truncate max-w-[160px]">White</span>
+          <span id="bottom-turn-indicator" class="text-[11px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded bg-amber-500 text-zinc-950">Turn</span>
+        </div>
+        <div class="flex items-baseline gap-2.5">
+          <span id="bottom-last-emt" class="text-xs md:text-sm font-mono text-zinc-400"></span>
+          <span id="bottom-clock" class="text-2xl md:text-3xl font-bold font-mono text-zinc-100">00:00</span>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- MOVE LIST & TIME STRIP (Scrollable horizontally) -->
+    <section class="h-12 bg-zinc-900/95 border-t border-b border-zinc-800 px-3 py-1 shrink-0 flex items-center">
+      <div id="move-list-scroll" class="moves-scroll w-full h-full flex items-center gap-2 overflow-x-auto whitespace-nowrap text-xs md:text-sm">
+        <span class="text-zinc-400 italic">Make a move on the board to start recording...</span>
+      </div>
+    </section>
+
+    <!-- BOTTOM CONTROL BAR (High-Contrast SVG + Text Buttons, No Emoji!) -->
+    <footer class="bg-zinc-900 px-3 py-2.5 border-t border-zinc-800 shrink-0">
+      <div class="flex flex-wrap items-center justify-center gap-2 max-w-4xl mx-auto">
+        <!-- Flip Board -->
+        <button id="btn-flip" class="min-h-[42px] px-3.5 py-2 text-xs md:text-sm font-semibold rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 transition flex items-center gap-1.5 cursor-pointer" title="Flip Board 180°">
+          <svg class="w-4 h-4 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          <span>Flip</span>
+        </button>
+
+        <!-- Pause / Resume Clock -->
+        <button id="btn-pause" class="min-h-[42px] px-3.5 py-2 text-xs md:text-sm font-semibold rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 transition flex items-center gap-1.5 cursor-pointer" title="Start / Pause Clock">
+          <span id="pause-icon-wrap" class="flex items-center">
+            <svg class="w-4 h-4 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </span>
+          <span id="pause-label">Start Clock</span>
+        </button>
+
+        <!-- Move History Navigation -->
+        <div class="flex items-center bg-zinc-800 rounded-lg border border-zinc-700 overflow-hidden min-h-[42px]">
+          <button id="btn-nav-first" class="px-3 py-2 text-xs md:text-sm hover:bg-zinc-700 text-zinc-100 font-mono font-bold transition cursor-pointer" title="First Move">|&lt;</button>
+          <button id="btn-nav-prev" class="px-3 py-2 text-xs md:text-sm hover:bg-zinc-700 text-zinc-100 font-mono font-bold border-l border-zinc-700 transition cursor-pointer" title="Previous Move">&lt;</button>
+          <button id="btn-nav-next" class="px-3 py-2 text-xs md:text-sm hover:bg-zinc-700 text-zinc-100 font-mono font-bold border-l border-zinc-700 transition cursor-pointer" title="Next Move">&gt;</button>
+          <button id="btn-nav-last" class="px-3 py-2 text-xs md:text-sm hover:bg-zinc-700 text-zinc-100 font-mono font-bold border-l border-zinc-700 transition cursor-pointer" title="Latest Move">&gt;|</button>
+        </div>
+
+        <!-- 1-Tap Undo -->
+        <button id="btn-undo" class="min-h-[42px] px-3.5 py-2 text-xs md:text-sm font-semibold rounded-lg bg-rose-950/80 hover:bg-rose-900 text-rose-200 border border-rose-800 transition flex items-center gap-1.5 cursor-pointer" title="Take Back Last Half-Move">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+          <span>Undo</span>
+        </button>
+
+        <!-- Result / End Game -->
+        <button id="btn-result" class="min-h-[42px] px-3.5 py-2 text-xs md:text-sm font-bold rounded-lg bg-zinc-800 hover:bg-zinc-700 text-amber-400 border border-zinc-700 transition flex items-center gap-1.5 cursor-pointer" title="Set Game Result">
+          <span>Result:</span>
+          <span id="result-badge-text">*</span>
+        </button>
+
+        <!-- Primary Bottom Export / Analyze Button -->
+        <button id="btn-export-bottom" class="min-h-[42px] px-4 py-2 text-xs md:text-sm font-bold rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 transition flex items-center gap-1.5 cursor-pointer shadow-md" title="Export PGN or Analyze on Lichess / Chess.com">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>Export / Analyze</span>
+        </button>
+      </div>
+    </footer>
+
+    <!-- MODAL: NEW GAME / TIME CONTROL / FEN -->
+    <div id="modal-new-game" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3">
+      <div class="bg-zinc-900 border border-zinc-700 rounded-xl max-w-md w-full p-5 flex flex-col gap-3.5 shadow-2xl">
+        <div class="flex items-center justify-between border-b border-zinc-800 pb-2.5">
+          <h2 class="text-base font-bold text-zinc-100">New Game Setup</h2>
+          <button id="close-modal-new-game" class="text-zinc-400 hover:text-zinc-100 text-xl leading-none px-2 cursor-pointer">&times;</button>
+        </div>
+
+        <!-- Mode Selection -->
+        <div>
+          <label class="text-xs text-zinc-300 font-semibold block mb-1.5">Time Tracking Mode</label>
+          <div class="grid grid-cols-2 gap-2 text-xs md:text-sm">
+            <button type="button" id="mode-stopwatch" class="mode-select-btn px-3 py-2 rounded-lg font-semibold border border-amber-500 bg-amber-500/20 text-amber-300 cursor-pointer">
+              Stopwatch (Elapsed)
+            </button>
+            <button type="button" id="mode-countdown" class="mode-select-btn px-3 py-2 rounded-lg font-semibold border border-zinc-700 bg-zinc-800 text-zinc-200 cursor-pointer">
+              Countdown Clock
+            </button>
+          </div>
+        </div>
+
+        <!-- Countdown Presets -->
+        <div id="countdown-options" class="hidden flex flex-col gap-2">
+          <label class="text-xs text-zinc-300 font-semibold">Time Control Preset</label>
+          <div class="grid grid-cols-4 gap-1.5 text-xs">
+            <button type="button" data-min="3" data-inc="0" class="tc-preset-btn px-2 py-1.5 rounded bg-zinc-800 border border-zinc-700 hover:border-amber-500 text-zinc-100 font-semibold cursor-pointer">3+0</button>
+            <button type="button" data-min="3" data-inc="2" class="tc-preset-btn px-2 py-1.5 rounded bg-zinc-800 border border-zinc-700 hover:border-amber-500 text-zinc-100 font-semibold cursor-pointer">3+2</button>
+            <button type="button" data-min="5" data-inc="0" class="tc-preset-btn px-2 py-1.5 rounded bg-zinc-800 border border-zinc-700 hover:border-amber-500 text-zinc-100 font-semibold cursor-pointer">5+0</button>
+            <button type="button" data-min="5" data-inc="3" class="tc-preset-btn px-2 py-1.5 rounded bg-zinc-800 border border-zinc-700 hover:border-amber-500 text-zinc-100 font-semibold cursor-pointer">5+3</button>
+            <button type="button" data-min="10" data-inc="0" class="tc-preset-btn px-2 py-1.5 rounded bg-zinc-800 border border-amber-500 bg-amber-500/20 text-amber-300 font-semibold cursor-pointer">10+0</button>
+            <button type="button" data-min="10" data-inc="5" class="tc-preset-btn px-2 py-1.5 rounded bg-zinc-800 border border-zinc-700 hover:border-amber-500 text-zinc-100 font-semibold cursor-pointer">10+5</button>
+            <button type="button" data-min="15" data-inc="10" class="tc-preset-btn px-2 py-1.5 rounded bg-zinc-800 border border-zinc-700 hover:border-amber-500 text-zinc-100 font-semibold cursor-pointer">15+10</button>
+            <button type="button" data-min="30" data-inc="0" class="tc-preset-btn px-2 py-1.5 rounded bg-zinc-800 border border-zinc-700 hover:border-amber-500 text-zinc-100 font-semibold cursor-pointer">30+0</button>
+          </div>
+          <div class="flex items-center gap-2 mt-1">
+            <input type="number" id="custom-minutes" placeholder="Custom Min" min="1" max="180" class="w-1/2 px-2.5 py-1.5 text-xs bg-zinc-800 border border-zinc-700 rounded text-zinc-100" />
+            <input type="number" id="custom-increment" placeholder="Inc (sec)" min="0" max="60" class="w-1/2 px-2.5 py-1.5 text-xs bg-zinc-800 border border-zinc-700 rounded text-zinc-100" />
+          </div>
+        </div>
+
+        <!-- Metadata: Players & Event -->
+        <div class="grid grid-cols-2 gap-2.5 text-xs">
+          <div>
+            <label class="text-zinc-300 font-semibold block mb-1">White Player</label>
+            <input type="text" id="input-white" value="White" class="w-full px-2.5 py-1.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-100" />
+          </div>
+          <div>
+            <label class="text-zinc-300 font-semibold block mb-1">Black Player</label>
+            <input type="text" id="input-black" value="Black" class="w-full px-2.5 py-1.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-100" />
+          </div>
+        </div>
+        <div class="text-xs">
+          <label class="text-zinc-300 font-semibold block mb-1">Event / Tournament Name</label>
+          <input type="text" id="input-event" placeholder="Casual OTB Game" class="w-full px-2.5 py-1.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-100" />
+        </div>
+
+        <!-- Custom FEN (Optional) -->
+        <div class="text-xs">
+          <label class="text-zinc-300 font-semibold block mb-1">Custom Starting FEN (Optional)</label>
+          <input type="text" id="input-fen" placeholder="Leave blank for standard start position" class="w-full px-2.5 py-1.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-100 font-mono text-[11px]" />
+          <span id="fen-error" class="hidden text-rose-400 text-xs mt-1 block">Invalid FEN string</span>
+        </div>
+
+        <button id="btn-start-new-game" class="w-full py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-sm transition mt-1 cursor-pointer">
+          Start New Game
+        </button>
+      </div>
+    </div>
+
+    <!-- MODAL: EXPORT & 1-TAP PLATFORM ANALYSIS -->
+    <div id="modal-export" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3">
+      <div class="bg-zinc-900 border border-zinc-700 rounded-xl max-w-md w-full p-5 flex flex-col gap-3.5 shadow-2xl">
+        <div class="flex items-center justify-between border-b border-zinc-800 pb-2.5">
+          <h2 class="text-base font-bold text-zinc-100">Export PGN & Analyze</h2>
+          <button id="close-modal-export" class="text-zinc-400 hover:text-zinc-100 text-xl leading-none px-2 cursor-pointer">&times;</button>
+        </div>
+
+        <!-- 1-Tap Analysis Direct Actions -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <button id="btn-export-lichess" class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 font-bold text-xs md:text-sm text-zinc-100 transition cursor-pointer">
+            <svg class="w-4 h-4 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            <span>Analyze on Lichess</span>
+          </button>
+          <button id="btn-export-chesscom" class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-emerald-950/90 hover:bg-emerald-900 border border-emerald-600 font-bold text-xs md:text-sm text-emerald-100 transition cursor-pointer">
+            <svg class="w-4 h-4 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            <span>Chess.com Analysis</span>
+          </button>
+        </div>
+        <p id="export-note" class="text-xs text-zinc-400 text-center leading-tight">
+          Lichess opens directly via API. Chess.com copies PGN to clipboard and opens the Analysis board.
+        </p>
+
+        <!-- Shareable Link Button (Cross-Device / Cross-Person Link!) -->
+        <button id="btn-copy-share-link" class="w-full py-2 px-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-xs md:text-sm font-semibold text-amber-300 flex items-center justify-center gap-2 transition cursor-pointer">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          <span>Copy Shareable Game URL (Anyone can view)</span>
+        </button>
+
+        <!-- PGN Options -->
+        <div class="flex items-center justify-between text-xs text-zinc-200 px-1">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="chk-include-clocks" checked class="rounded bg-zinc-800 border-zinc-600 text-amber-500 w-4 h-4" />
+            <span>Include per-move clock tags (<code>[%clk]</code> &amp; <code>[%emt]</code>)</span>
+          </label>
+        </div>
+
+        <!-- Live PGN Textarea -->
+        <textarea id="pgn-textarea" readonly rows="6" class="w-full p-2.5 text-xs font-mono bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-200 resize-none"></textarea>
+
+        <!-- Export Buttons -->
+        <div class="grid grid-cols-3 gap-2 text-xs md:text-sm">
+          <button id="btn-copy-pgn" class="py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold transition cursor-pointer">
+            Copy PGN
+          </button>
+          <button id="btn-download-pgn" class="py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-100 font-semibold transition cursor-pointer">
+            Download .pgn
+          </button>
+          <button id="btn-share-pgn" class="py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-100 font-semibold transition cursor-pointer">
+            Share...
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: ARCHIVE (SAVED GAMES) -->
+    <div id="modal-archive" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3">
+      <div class="bg-zinc-900 border border-zinc-700 rounded-xl max-w-md w-full p-5 flex flex-col gap-3.5 shadow-2xl max-h-[85vh]">
+        <div class="flex items-center justify-between border-b border-zinc-800 pb-2.5">
+          <h2 class="text-base font-bold text-zinc-100">Saved Game Archive (Local Browser)</h2>
+          <button id="close-modal-archive" class="text-zinc-400 hover:text-zinc-100 text-xl leading-none px-2 cursor-pointer">&times;</button>
+        </div>
+
+        <button id="btn-save-current" class="w-full py-2 text-xs md:text-sm font-bold rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 transition cursor-pointer">
+          + Save Current Game to Archive
+        </button>
+
+        <div id="archive-list" class="flex flex-col gap-2.5 overflow-y-auto max-h-[55vh] pr-1">
+          <div class="text-xs text-zinc-500 text-center py-4">No saved games in archive</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: RESULT / TERMINATION -->
+    <div id="modal-result" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3">
+      <div class="bg-zinc-900 border border-zinc-700 rounded-xl max-w-xs w-full p-4 flex flex-col gap-3 shadow-2xl">
+        <div class="flex items-center justify-between border-b border-zinc-800 pb-2">
+          <h2 class="text-sm font-bold text-zinc-100">Set Game Result</h2>
+          <button id="close-modal-result" class="text-zinc-400 hover:text-zinc-100 text-xl leading-none px-2 cursor-pointer">&times;</button>
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-xs md:text-sm">
+          <button data-res="1-0" class="res-btn py-2.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 font-bold text-zinc-100 cursor-pointer">1-0 (White)</button>
+          <button data-res="0-1" class="res-btn py-2.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 font-bold text-zinc-100 cursor-pointer">0-1 (Black)</button>
+          <button data-res="1/2-1/2" class="res-btn py-2.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 font-bold text-zinc-100 cursor-pointer">½-½ (Draw)</button>
+          <button data-res="*" class="res-btn py-2.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 font-bold text-zinc-100 cursor-pointer">* (Ongoing)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: SETTINGS -->
+    <div id="modal-settings" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3">
+      <div class="bg-zinc-900 border border-zinc-700 rounded-xl max-w-md w-full p-5 flex flex-col gap-3.5 shadow-2xl">
+        <div class="flex items-center justify-between border-b border-zinc-800 pb-2.5">
+          <h2 class="text-base font-bold text-zinc-100">Settings</h2>
+          <button id="close-modal-settings" class="text-zinc-400 hover:text-zinc-100 text-xl leading-none px-2 cursor-pointer">&times;</button>
+        </div>
+
+        <div class="flex flex-col gap-3.5 text-xs md:text-sm">
+          <!-- Auto Rotate Toggle (MUST default to false!) -->
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="font-semibold text-zinc-100">Auto-Rotate Board After Move</div>
+              <div class="text-xs text-zinc-400">Rotates board 180° after every move. Keep OFF for standard fixed-perspective OTB recording.</div>
+            </div>
+            <input type="checkbox" id="setting-auto-rotate" class="rounded bg-zinc-800 border-zinc-600 text-amber-500 w-4 h-4 mt-1 shrink-0" />
+          </div>
+
+          <!-- Wake Lock Toggle -->
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="font-semibold text-zinc-100">Keep Screen Awake</div>
+              <div class="text-xs text-zinc-400">Prevents phone screen from dimming or locking during OTB games.</div>
+            </div>
+            <input type="checkbox" id="setting-wake-lock" checked class="rounded bg-zinc-800 border-zinc-600 text-amber-500 w-4 h-4 mt-1 shrink-0" />
+          </div>
+
+          <!-- Move Sound / Haptic -->
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="font-semibold text-zinc-100">Tactile Move Audio</div>
+              <div class="text-xs text-zinc-400">Play subtle click sound when pieces move.</div>
+            </div>
+            <input type="checkbox" id="setting-sound" checked class="rounded bg-zinc-800 border-zinc-600 text-amber-500 w-4 h-4 mt-1 shrink-0" />
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-zinc-800 text-xs text-zinc-500 text-center">
+          OTB Chess Recorder PWA • Offline Ready
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="fixed bottom-20 inset-x-4 z-50 pointer-events-none flex flex-col items-center gap-2"></div>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

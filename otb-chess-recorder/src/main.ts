@@ -674,6 +674,20 @@ $('setting-sound').addEventListener('change', (e) => {
   sound.enabled = settings.soundEnabled;
 });
 
+// Rules Modal / Page Link (Opens seamlessly in a new tab without interrupting live game or clock)
+function openRulesPage() {
+  window.open('../chess-rules.html', '_blank', 'noopener');
+}
+
+const btnRules = $('btn-rules');
+if (btnRules) {
+  btnRules.addEventListener('click', openRulesPage);
+}
+const settingRulesBtn = $('setting-rules-btn');
+if (settingRulesBtn) {
+  settingRulesBtn.addEventListener('click', openRulesPage);
+}
+
 // App Startup:
 // 1. Check if a shared game PGN was passed via URL (?pgn=...)
 const urlParams = new URLSearchParams(window.location.search);
